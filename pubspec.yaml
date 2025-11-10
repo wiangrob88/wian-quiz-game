@@ -1,0 +1,19 @@
+name: image_quiz
+description: A simple 4-image quiz app in Flutter
+
+environment:
+  sdk: '^3.9.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Add other dependencies here if needed
+
+
+flutter:
+  assets:
+    - assets/images/apple.jpg
+    - assets/images/banana.jpg
+    - assets/images/orange.jpg
+    - assets/images/grape.jpg
