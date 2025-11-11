@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart';
 
 void main() => runApp(const ImageQuizApp());
 
@@ -252,6 +253,21 @@ class _QuizPageState extends State<QuizPage> {
   bool showResult = false;
   int? selectedIndex;
 
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
   void checkAnswer(int index) {
     setState(() {
       selectedIndex = index;
@@ -284,105 +300,134 @@ Widget build(BuildContext context) {
   final lang = widget.selectedLanguage;
 
   if (currentQuestion >= questions.length) {
-    return GradientScaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${tr(lang, 'finished')}\n${tr(lang, 'score')}: $score/${questions.length}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: retryQuiz, child: Text(tr(lang, 'retry'))),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr(lang, 'back')),
-            ),
-          ],
+  // Start confetti when quiz ends
+  _confettiController.play();
+
+  return GradientScaffold(
+    body: Stack(
+      children: [
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${tr(lang, 'finished')}\n${tr(lang, 'score')}: $score/${questions.length}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 24),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: retryQuiz,
+                child: Text(tr(lang, 'retry')),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr(lang, 'back')),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+
+        // 🎉 Confetti widget overlay
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [
+              Colors.green,
+              Colors.blue,
+              Colors.pink,
+              Colors.orange,
+              Colors.purple,
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   final question = questions[currentQuestion];
 
   return GradientScaffold(
-    appBar: AppBar(title: Text(tr(lang, 'quiz_title'))),
-    body: Container(
-      width: double.infinity, // ensures full width
-      height: double.infinity, // ensures full height
-      color: Colors.transparent, // let gradient show through
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              question.getText(lang),
-              style: const TextStyle(fontSize: 20),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.builder(
-                itemCount: question.imagePaths.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1,
-                ),
-                itemBuilder: (context, index) {
-                  final isSelected = selectedIndex == index;
-                  final isCorrect = index == question.correctIndex;
-                  Color borderColor = Colors.transparent;
-                  if (showResult && isSelected) {
-                    borderColor = isCorrect ? Colors.green : Colors.red;
-                  }
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: showResult ? null : () => checkAnswer(index),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: borderColor, width: 4),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Image.asset(
-                          question.imagePaths[index],
-                          fit: BoxFit.cover,
-                        ),
+  appBar: AppBar(title: Text(tr(lang, 'quiz_title'))),
+  body: Container(
+    width: double.infinity,
+    height: double.infinity,
+    color: Colors.transparent, // let gradient show through
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Text(
+            question.getText(lang),
+            style: const TextStyle(fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: GridView.builder(
+              itemCount: question.imagePaths.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1,
+              ),
+              itemBuilder: (context, index) {
+                final isSelected = selectedIndex == index;
+                final isCorrect = index == question.correctIndex;
+                Color borderColor = Colors.transparent;
+                if (showResult && isSelected) {
+                  borderColor = isCorrect ? Colors.green : Colors.red;
+                }
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: showResult ? null : () => checkAnswer(index),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: borderColor, width: 4),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Image.asset(
+                        question.imagePaths[index],
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  );
-                },
+                  ),
+                );
+              },
+            ),
+          ),
+          if (showResult) ...[
+            const SizedBox(height: 20),
+            Text(
+              selectedIndex == question.correctIndex
+                  ? tr(lang, 'correct')
+                  : tr(lang, 'wrong'),
+              style: TextStyle(
+                fontSize: 18,
+                color: selectedIndex == question.correctIndex
+                    ? Colors.green
+                    : Colors.red,
               ),
             ),
-            if (showResult) ...[
-              const SizedBox(height: 20),
-              Text(
-                selectedIndex == question.correctIndex
-                    ? tr(lang, 'correct')
-                    : tr(lang, 'wrong'),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: selectedIndex == question.correctIndex
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: nextQuestion,
-                child: Text(tr(lang, 'next')),
-              ),
-            ]
-          ],
-        ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: nextQuestion,
+              child: Text(tr(lang, 'next')),
+            ),
+          ]
+        ],
       ),
     ),
-  );
+  ),
+);
+
 }
 }
