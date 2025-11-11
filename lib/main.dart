@@ -1,8 +1,59 @@
 import 'package:flutter/material.dart';
 
-
 void main() => runApp(const ImageQuizApp());
 
+/// ---------------- GRADIENT THEME EXTENSION ----------------
+class AppGradients extends ThemeExtension<AppGradients> {
+  final LinearGradient background;
+
+  const AppGradients({required this.background});
+
+  @override
+  AppGradients copyWith({LinearGradient? background}) {
+    return AppGradients(
+      background: background ?? this.background,
+    );
+  }
+
+  @override
+  AppGradients lerp(ThemeExtension<AppGradients>? other, double t) {
+    if (other is! AppGradients) return this;
+    return AppGradients(
+      background: LinearGradient.lerp(background, other.background, t)!,
+    );
+  }
+}
+
+/// ---------------- GRADIENT SCAFFOLD ----------------
+class GradientScaffold extends StatelessWidget {
+  final PreferredSizeWidget? appBar;
+  final Widget body;
+  final Widget? floatingActionButton;
+
+  const GradientScaffold({
+    Key? key,
+    this.appBar,
+    required this.body,
+    this.floatingActionButton,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final gradient = Theme.of(context).extension<AppGradients>()!.background;
+
+    return Container(
+      decoration: BoxDecoration(gradient: gradient),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: appBar,
+        body: body,
+        floatingActionButton: floatingActionButton,
+      ),
+    );
+  }
+}
+
+/// ---------------- APP ROOT ----------------
 class ImageQuizApp extends StatelessWidget {
   const ImageQuizApp({super.key});
 
@@ -10,6 +61,17 @@ class ImageQuizApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Image Quiz',
+      theme: ThemeData(
+        extensions: <ThemeExtension<dynamic>>[
+          const AppGradients(
+            background: LinearGradient(
+              colors: [Colors.purple, Colors.orange],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ],
+      ),
       home: const LanguagePage(),
     );
   }
@@ -31,6 +93,7 @@ const translations = {
     'score': 'Score',
     'correct': 'Correct!',
     'wrong': 'Wrong!',
+    'quiz_title': 'Image Quiz',
   },
   'Afrikaans': {
     'menu_title': 'Beeldvasvra Kieslys',
@@ -44,6 +107,7 @@ const translations = {
     'score': 'Punte',
     'correct': 'Reg!',
     'wrong': 'Verkeerd!',
+    'quiz_title': 'Beeldvasvra',
   },
   'Zulu': {
     'menu_title': 'Imenyu Yombuzo Wezithombe',
@@ -57,14 +121,14 @@ const translations = {
     'score': 'Amaphuzu',
     'correct': 'Kulungile!',
     'wrong': 'Akulungile!',
+    'quiz_title': 'Umbuzo Wezithombe',
   },
 };
 
 String tr(String lang, String key) {
-  // Try the requested language, then English, then a placeholder
   return translations[lang]?[key] ??
-         translations['English']?[key] ??
-         '[$key]';
+      translations['English']?[key] ??
+      '[$key]';
 }
 
 // ---------------- LANGUAGE PAGE ----------------
@@ -73,7 +137,7 @@ class LanguagePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
       appBar: AppBar(title: const Text('Choose Language')),
       body: Center(
         child: Column(
@@ -107,7 +171,7 @@ class MenuPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GradientScaffold(
       appBar: AppBar(title: Text(tr(selectedLanguage, 'menu_title'))),
       body: Center(
         child: Column(
@@ -213,43 +277,53 @@ class _QuizPageState extends State<QuizPage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final lang = widget.selectedLanguage;
 
-    if (currentQuestion >= questions.length) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('${tr(lang, 'finished')}\n${tr(lang, 'score')}: $score/${questions.length}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24)),
-              const SizedBox(height: 20),
-              ElevatedButton(onPressed: retryQuiz, child: Text(tr(lang, 'retry'))),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(tr(lang, 'back')),
-              ),
-            ],
-          ),
+
+@override
+Widget build(BuildContext context) {
+  final lang = widget.selectedLanguage;
+
+  if (currentQuestion >= questions.length) {
+    return GradientScaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '${tr(lang, 'finished')}\n${tr(lang, 'score')}: $score/${questions.length}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: retryQuiz, child: Text(tr(lang, 'retry'))),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr(lang, 'back')),
+            ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    final question = questions[currentQuestion];
+  final question = questions[currentQuestion];
 
-    return Scaffold(
-      appBar: AppBar(title: Text(tr(lang, 'quiz_title'))),
-      body: Padding(
+  return GradientScaffold(
+    appBar: AppBar(title: Text(tr(lang, 'quiz_title'))),
+    body: Container(
+      width: double.infinity, // ensures full width
+      height: double.infinity, // ensures full height
+      color: Colors.transparent, // let gradient show through
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(question.getText(lang),
-                style: const TextStyle(fontSize: 20),
-                textAlign: TextAlign.center),
+            Text(
+              question.getText(lang),
+              style: const TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: GridView.builder(
@@ -276,8 +350,10 @@ class _QuizPageState extends State<QuizPage> {
                           border: Border.all(color: borderColor, width: 4),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Image.asset(question.imagePaths[index],
-                            fit: BoxFit.cover),
+                        child: Image.asset(
+                          question.imagePaths[index],
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   );
@@ -306,8 +382,7 @@ class _QuizPageState extends State<QuizPage> {
           ],
         ),
       ),
-    );
-  }
-
-
+    ),
+  );
+}
 }
