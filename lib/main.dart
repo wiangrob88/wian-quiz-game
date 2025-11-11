@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-flutter config --enable-web
-flutter devices
 
 void main() => runApp(const ImageQuizApp());
 
