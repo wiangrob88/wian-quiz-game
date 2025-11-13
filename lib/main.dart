@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
+import 'multiple_choice_quiz_page.dart';
+
 
 void main() => runApp(const ImageQuizApp());
 
@@ -83,10 +85,10 @@ const supportedLanguages = ['English', 'Afrikaans', 'Zulu'];
 
 const translations = {
   'English': {
-    'menu_title': 'Image Quiz Menu',
-    'welcome': 'Welcome to Image Quiz!',
-    'instruction': 'Tap Start to begin the quiz.\nIdentify the correct image!',
-    'start': 'Start Game',
+    'menu_title': 'Main Menu',
+    'welcome': 'Welcome to Funda !',
+    'instruction': 'Choose your game below.\nEnjoy!',
+    'start': 'Image Quiz',
     'next': 'Next',
     'retry': 'Retry',
     'back': 'Back to Menu',
@@ -97,10 +99,10 @@ const translations = {
     'quiz_title': 'Image Quiz',
   },
   'Afrikaans': {
-    'menu_title': 'Beeldvasvra Kieslys',
-    'welcome': 'Welkom by Beeldvasvra!',
-    'instruction': 'Tik Begin om te begin.\nIdentifiseer die regte prent!',
-    'start': 'Begin Speletjie',
+    'menu_title': 'Hoof Kieslys',
+    'welcome': 'Welkom by Funda!',
+    'instruction': 'Kies jou speletjie.\nGeniet dit!',
+    'start': 'Prentjie Kies',
     'next': 'Volgende',
     'retry': 'Probeer Weer',
     'back': 'Terug na Kieslys',
@@ -111,9 +113,9 @@ const translations = {
     'quiz_title': 'Beeldvasvra',
   },
   'Zulu': {
-    'menu_title': 'Imenyu Yombuzo Wezithombe',
-    'welcome': 'Wamukelekile kuMbuzo Wezithombe!',
-    'instruction': 'Cofa Qala ukuze uqale.\nKhetha isithombe esifanele!',
+    'menu_title': 'Imenyu Wezithombe',
+    'welcome': 'Wamukelekile kuMbuzo Funda!',
+    'instruction': 'Cofa Qala ukuze uqale.\nKhetha !',
     'start': 'Qala Umdlalo',
     'next': 'Okulandelayo',
     'retry': 'Phinda',
@@ -189,12 +191,23 @@ class MenuPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        QuizPage(selectedLanguage: selectedLanguage),
+                    builder: (context) => QuizPage(selectedLanguage: selectedLanguage),
                   ),
                 );
               },
               child: Text(tr(selectedLanguage, 'start')),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MultipleChoiceQuizPage(selectedLanguage: selectedLanguage),
+                  ),
+                );
+              },
+              child: const Text("Multiple Choice Quiz"),
             ),
           ],
         ),
